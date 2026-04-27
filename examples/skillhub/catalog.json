@@ -14,8 +14,9 @@
           "version": "1.0.0",
           "artifactPath": "browser-agent/1.0.0.tgz",
           "artifactType": "tgz",
-          "integrity": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-          "sizeBytes": 1,
+          "integrity": "sha256-cN6FLTtD5C+FJLk555/BZ4KC0UYv8mABrD0E6GV8Bso=",
+          "sizeBytes": 565,
+          "manifestPath": "skills.json",
           "reviewStatus": "unreviewed"
         }
       ]

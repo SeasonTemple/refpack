@@ -6,7 +6,7 @@ import { color } from "../ui/theme.js";
 export interface SkillHubPackCommandOptions {
   out?: string;
   id?: string;
-  version: string;
+  artifactVersion: string;
   reviewStatus?: "unreviewed" | "verified" | "rejected";
 }
 
@@ -20,7 +20,7 @@ export async function runSkillHubPack(packDir: string, options: SkillHubPackComm
   const result = await packSkillHubArtifact({
     packDir,
     outDir: options.out ?? ".",
-    version: options.version,
+    version: options.artifactVersion,
     skillId: options.id,
     reviewStatus: options.reviewStatus
   });

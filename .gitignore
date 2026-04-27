@@ -2,6 +2,7 @@ node_modules/
 dist/
 .tmp-tests/
 .tmp-installed/
+.tmp-installed-hub/
 .skillsrc.json
 examples/skillhub/artifacts/
 

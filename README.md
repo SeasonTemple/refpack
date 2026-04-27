@@ -71,7 +71,7 @@ skills list
 skills view <id>
 skills remove <id>
 skills info
-skills skillhub pack <packDir> --version <version>
+skills skillhub pack <packDir> --artifact-version <version>
 skills skillhub validate --catalog <file> --artifact-root <dir>
 ```
 
@@ -132,7 +132,7 @@ See [docs/skillhub.md](docs/skillhub.md).
 Create a versioned artifact from a local skill pack:
 
 ```bash
-skills skillhub pack ./examples/basic-skill-pack --version 1.0.0 --out ./examples/skillhub/artifacts
+skills skillhub pack ./examples/basic-skill-pack --id browser-agent --artifact-version 1.0.0 --out ./examples/skillhub/artifacts
 ```
 
 Paste the printed catalog version metadata into your SkillHub catalog, then validate every referenced artifact before deployment:

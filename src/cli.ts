@@ -95,7 +95,7 @@ skillhub
   .command("pack")
   .description("Create a SkillHub .tgz artifact from a skill pack")
   .argument("<packDir>", "Skill pack directory containing root skills.json")
-  .requiredOption("--version <version>", "Artifact version to publish")
+  .requiredOption("--artifact-version <version>", "Artifact version to publish")
   .option("--out <dir>", "Output artifact directory", ".")
   .option("--id <skillId>", "Skill id to publish when the pack contains multiple skills")
   .option("--review-status <status>", "Catalog review status: unreviewed, verified, or rejected")

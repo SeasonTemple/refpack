@@ -106,7 +106,8 @@ Use the CLI to create the exact `.tgz` bytes and metadata expected by the catalo
 
 ```bash
 skills skillhub pack ./examples/basic-skill-pack \
-  --version 1.0.0 \
+  --id browser-agent \
+  --artifact-version 1.0.0 \
   --out ./examples/skillhub/artifacts
 ```
 
