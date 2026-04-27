@@ -12,6 +12,31 @@
 - Displays adapter-specific setup instructions without mutating agent config files.
 - Keeps npm dependency installation opt-in.
 
+## Project Status
+
+Current milestone: SkillHub MVP is implemented and end-to-end verified.
+
+Completed:
+
+- Local CLI installer for registry, local pack, and supported remote sources.
+- Dry-run and diff output before writing skill files.
+- Safe install planning with overwrite protection.
+- Read-only SkillHub HTTP server backed by a JSON catalog and artifact directory.
+- CLI-compatible SkillHub `/registry.json` projection.
+- Versioned `.tgz` artifact serving through `/api/packs/:id/:version`.
+- SkillHub artifact authoring with `skills skillhub pack`.
+- Catalog and artifact validation with `skills skillhub validate`.
+- SHA-256 integrity and exact byte-size verification for hosted artifacts.
+- Safe `.tgz` extraction that rejects path traversal, absolute paths, links, and unsupported entry types.
+- Automated coverage for the installer, registry parser, SkillHub catalog, SkillHub server, archive provider, authoring flow, and real CLI smoke paths.
+- Manual end-to-end verification for local registry install, real Codex skills directory install/remove, SkillHub pack/validate, SkillHub server startup, and CLI install from SkillHub.
+
+Current intended use:
+
+- Local development and validation of agent skill packs.
+- Team-internal read-only skill distribution.
+- CI workflows that generate artifacts, validate catalogs, and deploy static catalog/artifact files behind the SkillHub server.
+
 ## Requirements
 
 - Node.js 20 or newer
@@ -232,6 +257,76 @@ docs/             authoring documentation
 ```
 
 The smoke test in `test/cli-smoke.test.ts` builds the CLI and runs the same user-facing flow shown in Quick Start.
+
+## Roadmap
+
+### Phase 1: Installer and Read-Only SkillHub MVP
+
+Status: complete.
+
+- CLI config, registry search/view, install, list, and remove.
+- Local pack installs and registry id installs.
+- SkillHub catalog parsing and registry projection.
+- Read-only HTTP server for catalog APIs and versioned artifacts.
+- Hosted `.tgz` artifact download, integrity verification, safe extraction, and install.
+- Local artifact authoring and catalog validation commands.
+
+### Phase 2: Authoring Workflow Polish
+
+Status: next.
+
+- Generate or update catalog entries directly from `skills skillhub pack`.
+- Add a catalog add/update command to reduce manual JSON editing.
+- Add stronger example workflows for multi-skill packs and multiple versions.
+- Add release notes or changelog generation for skill versions.
+- Improve CLI output for pack metadata so it is easier to paste or pipe into automation.
+
+### Phase 3: Deployment and CI
+
+Status: planned.
+
+- Add a Dockerfile or documented container deployment.
+- Add GitHub Actions examples for build, test, pack, validate, and deploy.
+- Document static artifact hosting patterns for simple internal deployments.
+- Add operational checks for validating `/health`, `/registry.json`, and a CLI dry run after deployment.
+- Add example rollback steps for catalog/artifact deployments.
+
+### Phase 4: Trust and Supply Chain
+
+Status: planned.
+
+- Add artifact signing separate from SHA-256 byte integrity.
+- Define trust policy for publisher keys.
+- Support signature verification in the CLI before install planning.
+- Document key rotation and revocation assumptions.
+- Add audit metadata for published skill versions.
+
+### Phase 5: Private Distribution
+
+Status: planned.
+
+- Add authentication and authorization for private catalogs.
+- Support organization or namespace boundaries.
+- Add token-based CLI access to private SkillHub deployments.
+- Define private registry deployment guidance.
+
+### Phase 6: Update and Lifecycle Management
+
+Status: planned.
+
+- Track installed skill metadata locally.
+- Add `outdated` or `update` commands.
+- Support version selection and upgrade previews.
+- Preserve the existing dry-run-first install model for upgrades.
+
+### Phase 7: Web UI
+
+Status: planned.
+
+- Browse catalog skills and versions.
+- Show tags, adapters, review status, artifact metadata, and install snippets.
+- Keep installation and safety decisions in the CLI.
+- Defer write/admin UI until publishing, auth, and trust models are defined.
 
 ## Current Scope
 
