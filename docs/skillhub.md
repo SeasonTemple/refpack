@@ -17,7 +17,7 @@ SkillHub v1 does not include:
 
 - Login, tokens, SSO, users, or organizations.
 - Private registries.
-- Publishing commands.
+- Remote publishing workflows.
 - Update or outdated tracking.
 - Web UI.
 - Artifact signatures or publisher identity.
@@ -99,6 +99,45 @@ The CLI rejects archives with:
 - mismatched or oversized byte counts
 
 Integrity verifies bytes, not author identity. Treat hosted skills as third-party code-like content until signatures and publisher trust exist.
+
+## Authoring Artifacts
+
+Use the CLI to create the exact `.tgz` bytes and metadata expected by the catalog:
+
+```bash
+skills skillhub pack ./examples/basic-skill-pack \
+  --version 1.0.0 \
+  --out ./examples/skillhub/artifacts
+```
+
+The command writes:
+
+```text
+examples/skillhub/artifacts/browser-agent/1.0.0.tgz
+```
+
+It also prints a catalog version snippet:
+
+```json
+{
+  "version": "1.0.0",
+  "artifactPath": "browser-agent/1.0.0.tgz",
+  "artifactType": "tgz",
+  "integrity": "sha256-...",
+  "sizeBytes": 12345,
+  "manifestPath": "skills.json"
+}
+```
+
+If a pack contains multiple skills, pass `--id <skillId>` so the artifact path and catalog metadata use the intended skill id.
+
+Paste the printed version object into the matching catalog skill's `versions` array. Before deploying a catalog, validate that every referenced artifact exists, has the declared size and integrity, extracts safely, and contains root `skills.json`:
+
+```bash
+skills skillhub validate \
+  --catalog ./examples/skillhub/catalog.json \
+  --artifact-root ./examples/skillhub/artifacts
+```
 
 ## Running SkillHub
 

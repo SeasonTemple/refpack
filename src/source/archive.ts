@@ -1,11 +1,18 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import zlib from "node:zlib";
 import fsExtra from "fs-extra";
 import { UserError } from "../errors/user-error.js";
-import { assertSafeRelativePath, resolveInside } from "../paths.js";
+import { assertSafeRelativePath, normalizeDisplayPath, resolveInside } from "../paths.js";
 
 const BLOCK_SIZE = 512;
+
+export interface TgzEntry {
+  name: string;
+  body?: Buffer;
+  type?: "file" | "directory";
+}
 
 export async function extractTgz(buffer: Buffer, destination: string): Promise<void> {
   const tar = zlib.gunzipSync(buffer);
@@ -42,10 +49,98 @@ export async function extractTgz(buffer: Buffer, destination: string): Promise<v
   }
 }
 
+export async function createTgzFromDirectory(sourceDir: string): Promise<Buffer> {
+  const root = path.resolve(sourceDir);
+  const entries = await listArchiveEntries(root);
+  return createTgz(entries);
+}
+
+export function sha256Integrity(buffer: Buffer): string {
+  return `sha256-${crypto.createHash("sha256").update(buffer).digest("base64")}`;
+}
+
 export async function assertRootManifest(extractedDir: string): Promise<void> {
   if (!(await fsExtra.pathExists(path.join(extractedDir, "skills.json")))) {
     throw new UserError("SkillHub archive must contain skills.json at the archive root.", "INVALID_SKILLHUB_ARCHIVE");
   }
+}
+
+async function listArchiveEntries(root: string): Promise<TgzEntry[]> {
+  const entries: TgzEntry[] = [];
+
+  async function walk(dir: string): Promise<void> {
+    const children = (await fs.readdir(dir)).sort((a, b) => a.localeCompare(b));
+    for (const child of children) {
+      const absolute = path.join(dir, child);
+      const relative = normalizeDisplayPath(path.relative(root, absolute));
+      validateEntryName(relative);
+      const stats = await fs.lstat(absolute);
+
+      if (stats.isSymbolicLink()) {
+        throw new UserError(`Cannot pack symbolic link: ${relative}`, "UNSAFE_ARCHIVE_ENTRY");
+      }
+      if (stats.isDirectory()) {
+        entries.push({ name: `${relative}/`, type: "directory" });
+        await walk(absolute);
+      } else if (stats.isFile()) {
+        entries.push({ name: relative, type: "file", body: await fs.readFile(absolute) });
+      } else {
+        throw new UserError(`Cannot pack unsupported file type: ${relative}`, "UNSAFE_ARCHIVE_ENTRY");
+      }
+    }
+  }
+
+  await walk(root);
+  return entries;
+}
+
+function createTgz(entries: TgzEntry[]): Buffer {
+  const blocks: Buffer[] = [];
+  for (const entry of entries) {
+    const body = entry.body ?? Buffer.alloc(0);
+    const typeflag = entry.type === "directory" ? "5" : "0";
+    blocks.push(createHeader(entry.name, typeflag === "0" ? body.length : 0, typeflag));
+    if (typeflag === "0") {
+      blocks.push(body);
+      blocks.push(Buffer.alloc(padding(body.length)));
+    }
+  }
+  blocks.push(Buffer.alloc(BLOCK_SIZE * 2));
+  return zlib.gzipSync(Buffer.concat(blocks));
+}
+
+function createHeader(entryName: string, size: number, typeflag: string): Buffer {
+  const header = Buffer.alloc(BLOCK_SIZE);
+  const { name, prefix } = splitUstarName(entryName);
+  writeString(header, name, 0, 100);
+  writeOctal(header, typeflag === "5" ? 0o755 : 0o644, 100, 8);
+  writeOctal(header, 0, 108, 8);
+  writeOctal(header, 0, 116, 8);
+  writeOctal(header, size, 124, 12);
+  writeOctal(header, 0, 136, 12);
+  header.fill(" ", 148, 156);
+  writeString(header, typeflag, 156, 1);
+  writeString(header, "ustar", 257, 6);
+  writeString(header, "00", 263, 2);
+  writeString(header, prefix, 345, 155);
+  const checksum = header.reduce((sum, byte) => sum + byte, 0);
+  writeOctal(header, checksum, 148, 8);
+  return header;
+}
+
+function splitUstarName(entryName: string): { name: string; prefix: string } {
+  if (Buffer.byteLength(entryName) <= 100) return { name: entryName, prefix: "" };
+
+  const parts = entryName.split("/");
+  for (let split = parts.length - 1; split > 0; split -= 1) {
+    const prefix = parts.slice(0, split).join("/");
+    const name = parts.slice(split).join("/");
+    if (Buffer.byteLength(prefix) <= 155 && Buffer.byteLength(name) <= 100) {
+      return { name, prefix };
+    }
+  }
+
+  throw new UserError(`Archive entry path is too long: ${entryName}`, "UNSAFE_ARCHIVE_ENTRY");
 }
 
 function validateEntryName(entryName: string): void {
@@ -68,6 +163,19 @@ function readOctal(buffer: Buffer, offset: number, length: number): number {
   const value = readString(buffer, offset, length);
   if (!value) return 0;
   return Number.parseInt(value, 8);
+}
+
+function writeString(buffer: Buffer, value: string, offset: number, length: number): void {
+  buffer.write(value.slice(0, length), offset, length, "utf8");
+}
+
+function writeOctal(buffer: Buffer, value: number, offset: number, length: number): void {
+  const text = value.toString(8).padStart(length - 1, "0");
+  buffer.write(`${text}\0`.slice(0, length), offset, length, "ascii");
+}
+
+function padding(size: number): number {
+  return (BLOCK_SIZE - (size % BLOCK_SIZE)) % BLOCK_SIZE;
 }
 
 function isZeroBlock(buffer: Buffer): boolean {

@@ -71,6 +71,8 @@ skills list
 skills view <id>
 skills remove <id>
 skills info
+skills skillhub pack <packDir> --version <version>
+skills skillhub validate --catalog <file> --artifact-root <dir>
 ```
 
 ## Installing From Sources
@@ -126,6 +128,18 @@ skills add browser-agent --dry-run
 ```
 
 See [docs/skillhub.md](docs/skillhub.md).
+
+Create a versioned artifact from a local skill pack:
+
+```bash
+skills skillhub pack ./examples/basic-skill-pack --version 1.0.0 --out ./examples/skillhub/artifacts
+```
+
+Paste the printed catalog version metadata into your SkillHub catalog, then validate every referenced artifact before deployment:
+
+```bash
+skills skillhub validate --catalog ./examples/skillhub/catalog.json --artifact-root ./examples/skillhub/artifacts
+```
 
 Run the built SkillHub server with:
 
@@ -209,6 +223,7 @@ src/flow/         Add/install orchestration
 src/install/      Install planning, file copying, dependency install
 src/manifest/     skills.json validation
 src/registry/     registry parsing and search
+src/skillhub/     SkillHub catalog, server, and authoring helpers
 src/source/       local and remote source resolution
 src/ui/           prompt and terminal output helpers
 test/             Vitest coverage
@@ -221,4 +236,4 @@ The smoke test in `test/cli-smoke.test.ts` builds the CLI and runs the same user
 ## Current Scope
 
 This repository implements the local CLI and installer engine. It does not yet cover npm publishing, signed registries, private registry auth, automatic update tracking, or automatic agent config mutation.
-SkillHub MVP adds a read-only catalog and artifact server, but still does not include login, publishing, private registries, update tracking, signatures, or a Web UI.
+SkillHub MVP adds a read-only catalog and artifact server plus local artifact authoring helpers, but still does not include login, remote publishing, private registries, update tracking, signatures, or a Web UI.

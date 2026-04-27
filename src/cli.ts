@@ -6,6 +6,7 @@ import { runInfo } from "./commands/info.js";
 import { runList } from "./commands/list.js";
 import { runRemove } from "./commands/remove.js";
 import { runSearch } from "./commands/search.js";
+import { runSkillHubPack, runSkillHubValidate } from "./commands/skillhub.js";
 import { runView } from "./commands/view.js";
 import { renderIntro, renderOutro } from "./ui/prompts.js";
 import { color } from "./ui/theme.js";
@@ -85,6 +86,28 @@ program
   .command("info")
   .description("Show current skills installer config")
   .action(wrap(runInfo));
+
+const skillhub = program
+  .command("skillhub")
+  .description("Author and validate SkillHub catalogs and artifacts");
+
+skillhub
+  .command("pack")
+  .description("Create a SkillHub .tgz artifact from a skill pack")
+  .argument("<packDir>", "Skill pack directory containing root skills.json")
+  .requiredOption("--version <version>", "Artifact version to publish")
+  .option("--out <dir>", "Output artifact directory", ".")
+  .option("--id <skillId>", "Skill id to publish when the pack contains multiple skills")
+  .option("--review-status <status>", "Catalog review status: unreviewed, verified, or rejected")
+  .action(wrap(runSkillHubPack));
+
+skillhub
+  .command("validate")
+  .description("Validate a SkillHub catalog and its referenced artifacts")
+  .requiredOption("--catalog <file>", "SkillHub catalog JSON path")
+  .requiredOption("--artifact-root <dir>", "Directory containing catalog artifactPath files")
+  .option("--max-artifact-bytes <bytes>", "Maximum allowed artifact size")
+  .action(wrap(runSkillHubValidate));
 
 program.parseAsync(process.argv).catch((error) => {
   console.error(color.red(toUserMessage(error)));
