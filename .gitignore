@@ -3,6 +3,7 @@ dist/
 .tmp-tests/
 .tmp-installed/
 .tmp-installed-hub/
+.refpackrc.json
 .skillsrc.json
 examples/skillhub/artifacts/
 

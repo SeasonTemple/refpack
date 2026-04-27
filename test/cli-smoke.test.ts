@@ -48,7 +48,7 @@ describe("CLI smoke flow", () => {
 
     const init = await runCli(["--no-banner", "init", "--target", "./installed", "--registry", "./registry.json"]);
     expect(init.stdout).toContain("Saved config to");
-    await expect(fs.pathExists(path.join(tmpRoot, ".skillsrc.json"))).resolves.toBe(true);
+    await expect(fs.pathExists(path.join(tmpRoot, ".refpackrc.json"))).resolves.toBe(true);
 
     const search = await runCli(["search", "browser"]);
     expect(search.stdout).toContain("browser-agent");

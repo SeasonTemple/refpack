@@ -2,14 +2,14 @@ import path from "node:path";
 import fs from "fs-extra";
 import { UserError } from "./errors/user-error.js";
 
-export interface SkillsConfig {
+export interface RefpackConfig {
   target?: string;
   registry?: string;
 }
 
-export const CONFIG_FILE = ".skillsrc.json";
+export const CONFIG_FILE = ".refpackrc.json";
 
-export async function loadConfig(cwd = process.cwd()): Promise<SkillsConfig> {
+export async function loadConfig(cwd = process.cwd()): Promise<RefpackConfig> {
   const file = path.join(cwd, CONFIG_FILE);
   if (!(await fs.pathExists(file))) return {};
 
@@ -24,16 +24,16 @@ export async function loadConfig(cwd = process.cwd()): Promise<SkillsConfig> {
   };
 }
 
-export async function saveConfig(config: SkillsConfig, cwd = process.cwd()): Promise<string> {
+export async function saveConfig(config: RefpackConfig, cwd = process.cwd()): Promise<string> {
   const file = path.join(cwd, CONFIG_FILE);
   await fs.writeJson(file, config, { spaces: 2 });
   return file;
 }
 
-export function resolveTarget(optionsTarget: string | undefined, config: SkillsConfig): string {
+export function resolveTarget(optionsTarget: string | undefined, config: RefpackConfig): string {
   const target = optionsTarget ?? config.target;
   if (!target) {
-    throw new UserError("Missing target directory. Pass --target <dir> or run skills init.", "MISSING_TARGET");
+    throw new UserError("Missing target directory. Pass --target <dir> or run refpack init.", "MISSING_TARGET");
   }
   return path.resolve(target);
 }

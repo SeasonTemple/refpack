@@ -3,7 +3,7 @@ import figlet from "figlet";
 import type { SkillDefinition } from "../manifest/types.js";
 import { UserError } from "../errors/user-error.js";
 
-export function renderIntro(title = "SKILLS", enabled = process.stdout.isTTY): void {
+export function renderIntro(title = "REFPACK", enabled = process.stdout.isTTY): void {
   if (!enabled) return;
   try {
     const banner = figlet.textSync(title, { horizontalLayout: "default", width: 80 });
@@ -11,7 +11,7 @@ export function renderIntro(title = "SKILLS", enabled = process.stdout.isTTY): v
   } catch {
     // Banner is decorative. Failure should never block installation.
   }
-  p.intro("skills installer");
+  p.intro("refpack");
 }
 
 export function renderOutro(message: string): void {

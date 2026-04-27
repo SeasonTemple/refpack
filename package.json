@@ -1,10 +1,10 @@
 {
-  "name": "modern-ref-pack",
+  "name": "refpack",
   "version": "0.1.0",
-  "description": "A shadcn-like installer for agent skills.",
+  "description": "A toolchain for packaging, validating, distributing, and installing reusable AI work context packs.",
   "type": "module",
   "bin": {
-    "skills": "./dist/cli.js"
+    "refpack": "./dist/cli.js"
   },
   "files": [
     "dist",

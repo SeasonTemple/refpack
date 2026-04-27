@@ -1,6 +1,6 @@
 # SkillHub
 
-SkillHub is the read-only server companion for `modern-ref-pack`. It hosts a skill catalog and versioned skill pack artifacts, then exposes a CLI-compatible registry at `/registry.json`.
+SkillHub is the read-only server companion for `refpack`. It hosts a skill catalog and versioned skill pack artifacts, then exposes a CLI-compatible registry at `/registry.json`.
 
 ## MVP Scope
 
@@ -33,7 +33,7 @@ GET /api/skills/:id
 GET /api/packs/:id/:version
 ```
 
-`/registry.json` is the installer contract. It projects the SkillHub catalog into the existing registry shape consumed by `skills search`, `skills view`, and `skills add`.
+`/registry.json` is the installer contract. It projects the SkillHub catalog into the existing registry shape consumed by `refpack search`, `refpack view`, and `refpack add`.
 
 ## Catalog Format
 
@@ -105,7 +105,7 @@ Integrity verifies bytes, not author identity. Treat hosted skills as third-part
 Use the CLI to create the exact `.tgz` bytes and metadata expected by the catalog:
 
 ```bash
-skills skillhub pack ./examples/basic-skill-pack \
+refpack skillhub pack ./examples/basic-skill-pack \
   --id browser-agent \
   --artifact-version 1.0.0 \
   --out ./examples/skillhub/artifacts
@@ -135,7 +135,7 @@ If a pack contains multiple skills, pass `--id <skillId>` so the artifact path a
 Paste the printed version object into the matching catalog skill's `versions` array. Before deploying a catalog, validate that every referenced artifact exists, has the declared size and integrity, extracts safely, and contains root `skills.json`:
 
 ```bash
-skills skillhub validate \
+refpack skillhub validate \
   --catalog ./examples/skillhub/catalog.json \
   --artifact-root ./examples/skillhub/artifacts
 ```
@@ -154,9 +154,9 @@ node dist/skillhub/server/entry.js
 Then configure the CLI:
 
 ```bash
-skills init --target ~/.codex/skills --registry http://127.0.0.1:3333/registry.json
-skills search browser
-skills add browser-agent --dry-run
+refpack init --target ~/.codex/skills --registry http://127.0.0.1:3333/registry.json
+refpack search browser
+refpack add browser-agent --dry-run
 ```
 
 ## Operational Notes

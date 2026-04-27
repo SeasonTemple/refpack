@@ -1,6 +1,6 @@
-# modern-ref-pack
+# refpack
 
-`modern-ref-pack` is a TypeScript CLI for installing agent skills from local packs, remote sources, or static registries. It follows the same broad pattern as modern developer-tool installers: discover installable units, show an install plan, copy selected files safely, and keep dependency installation explicit.
+`refpack` is a TypeScript toolchain for packaging, validating, distributing, and installing reusable AI work context packs. The current MVP focuses on agent skill packs: discover installable units, show an install plan, copy selected files safely, and keep dependency installation explicit.
 
 ## What It Does
 
@@ -14,7 +14,7 @@
 
 ## Project Status
 
-Current milestone: SkillHub MVP is implemented and end-to-end verified.
+Current milestone: agent skill pack MVP with SkillHub is implemented and end-to-end verified.
 
 Completed:
 
@@ -24,8 +24,8 @@ Completed:
 - Read-only SkillHub HTTP server backed by a JSON catalog and artifact directory.
 - CLI-compatible SkillHub `/registry.json` projection.
 - Versioned `.tgz` artifact serving through `/api/packs/:id/:version`.
-- SkillHub artifact authoring with `skills skillhub pack`.
-- Catalog and artifact validation with `skills skillhub validate`.
+- SkillHub artifact authoring with `refpack skillhub pack`.
+- Catalog and artifact validation with `refpack skillhub validate`.
 - SHA-256 integrity and exact byte-size verification for hosted artifacts.
 - Safe `.tgz` extraction that rejects path traversal, absolute paths, links, and unsupported entry types.
 - Automated coverage for the installer, registry parser, SkillHub catalog, SkillHub server, archive provider, authoring flow, and real CLI smoke paths.
@@ -77,27 +77,27 @@ node dist/cli.js list --target ./.tmp-installed
 node dist/cli.js remove browser-agent --yes --target ./.tmp-installed
 ```
 
-After publishing or linking the package, the binary name is `skills`:
+After publishing or linking the package, the binary name is `refpack`:
 
 ```bash
-skills init --target ~/.codex/skills --registry ./examples/registry.json
-skills search browser
-skills add browser-agent --dry-run
-skills add browser-agent --yes
+refpack init --target ~/.codex/skills --registry ./examples/registry.json
+refpack search browser
+refpack add browser-agent --dry-run
+refpack add browser-agent --yes
 ```
 
 ## Commands
 
 ```text
-skills init
-skills add <source-or-id> [skills...]
-skills search [query]
-skills list
-skills view <id>
-skills remove <id>
-skills info
-skills skillhub pack <packDir> --artifact-version <version>
-skills skillhub validate --catalog <file> --artifact-root <dir>
+refpack init
+refpack add <source-or-id> [skills...]
+refpack search [query]
+refpack list
+refpack view <id>
+refpack remove <id>
+refpack info
+refpack skillhub pack <packDir> --artifact-version <version>
+refpack skillhub validate --catalog <file> --artifact-root <dir>
 ```
 
 ## Installing From Sources
@@ -105,32 +105,32 @@ skills skillhub validate --catalog <file> --artifact-root <dir>
 Install by registry id:
 
 ```bash
-skills add browser-agent --yes
+refpack add browser-agent --yes
 ```
 
 Install from a local pack:
 
 ```bash
-skills add ./examples/basic-skill-pack --target ~/.codex/skills --all
+refpack add ./examples/basic-skill-pack --target ~/.codex/skills --all
 ```
 
 Install from a remote source supported by the source resolver:
 
 ```bash
-skills add gh:your-org/agent-skills --target ~/.codex/skills --all
+refpack add gh:your-org/agent-skills --target ~/.codex/skills --all
 ```
 
 Preview writes before installing:
 
 ```bash
-skills add browser-agent --dry-run
-skills add browser-agent --diff
+refpack add browser-agent --dry-run
+refpack add browser-agent --diff
 ```
 
 Overwrite an existing installed skill only when intended:
 
 ```bash
-skills add browser-agent --overwrite --yes
+refpack add browser-agent --overwrite --yes
 ```
 
 ## SkillHub
@@ -147,9 +147,9 @@ GET /api/packs/:id/:version
 After a SkillHub deployment is running, configure the CLI against it:
 
 ```bash
-skills init --target ~/.codex/skills --registry https://skillhub.example.com/registry.json
-skills search browser
-skills add browser-agent --dry-run
+refpack init --target ~/.codex/skills --registry https://skillhub.example.com/registry.json
+refpack search browser
+refpack add browser-agent --dry-run
 ```
 
 See [docs/skillhub.md](docs/skillhub.md).
@@ -157,13 +157,13 @@ See [docs/skillhub.md](docs/skillhub.md).
 Create a versioned artifact from a local skill pack:
 
 ```bash
-skills skillhub pack ./examples/basic-skill-pack --id browser-agent --artifact-version 1.0.0 --out ./examples/skillhub/artifacts
+refpack skillhub pack ./examples/basic-skill-pack --id browser-agent --artifact-version 1.0.0 --out ./examples/skillhub/artifacts
 ```
 
 Paste the printed catalog version metadata into your SkillHub catalog, then validate every referenced artifact before deployment:
 
 ```bash
-skills skillhub validate --catalog ./examples/skillhub/catalog.json --artifact-root ./examples/skillhub/artifacts
+refpack skillhub validate --catalog ./examples/skillhub/catalog.json --artifact-root ./examples/skillhub/artifacts
 ```
 
 Run the built SkillHub server with:
@@ -177,7 +177,7 @@ npm run skillhub
 
 ## Safety Model
 
-- No target directory is guessed. Pass `--target` or run `skills init`.
+- No target directory is guessed. Pass `--target` or run `refpack init`.
 - Existing skill directories are blocked by default.
 - `--dry-run` prints the install plan without writing files.
 - Skill `source` and `target` paths must be relative and cannot escape their base directories.
@@ -275,7 +275,7 @@ Status: complete.
 
 Status: next.
 
-- Generate or update catalog entries directly from `skills skillhub pack`.
+- Generate or update catalog entries directly from `refpack skillhub pack`.
 - Add a catalog add/update command to reduce manual JSON editing.
 - Add stronger example workflows for multi-skill packs and multiple versions.
 - Add release notes or changelog generation for skill versions.
@@ -330,5 +330,5 @@ Status: planned.
 
 ## Current Scope
 
-This repository implements the local CLI and installer engine. It does not yet cover npm publishing, signed registries, private registry auth, automatic update tracking, or automatic agent config mutation.
-SkillHub MVP adds a read-only catalog and artifact server plus local artifact authoring helpers, but still does not include login, remote publishing, private registries, update tracking, signatures, or a Web UI.
+This repository implements the `refpack` CLI and the first supported pack kind: agent skill packs. It does not yet cover npm publishing, signed registries, private registry auth, automatic update tracking, or automatic agent config mutation.
+SkillHub MVP adds a read-only skill catalog and artifact server plus local artifact authoring helpers, but still does not include login, remote publishing, private registries, update tracking, signatures, or a Web UI.

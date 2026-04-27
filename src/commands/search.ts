@@ -10,7 +10,7 @@ export interface SearchOptions {
 export async function runSearch(query: string, options: SearchOptions): Promise<void> {
   const config = await loadConfig();
   const registryRef = options.registry ?? config.registry;
-  if (!registryRef) throw new UserError("Missing registry. Pass --registry <url-or-file> or run skills init.", "MISSING_REGISTRY");
+  if (!registryRef) throw new UserError("Missing registry. Pass --registry <url-or-file> or run refpack init.", "MISSING_REGISTRY");
 
   const registry = await readRegistry(registryRef);
   const results = searchRegistry(registry, query);

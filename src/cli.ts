@@ -15,18 +15,18 @@ import { toUserMessage, UserError } from "./errors/user-error.js";
 const program = new Command();
 
 program
-  .name("skills")
-  .description("Install agent skills from local packs, registries, and remote sources.")
+  .name("refpack")
+  .description("Package, distribute, and install reusable AI work context packs. Current MVP supports agent skill packs.")
   .version("0.1.0")
   .option("--no-banner", "Disable ASCII banner");
 
 program
   .command("init")
-  .description("Create .skillsrc.json for this project")
+  .description("Create .refpackrc.json for this project")
   .option("-t, --target <dir>", "Target skills directory")
   .option("-r, --registry <ref>", "Registry URL or JSON file")
   .action(wrap(async (options) => {
-    renderIntro("SKILLS", program.opts().banner);
+    renderIntro("REFPACK", program.opts().banner);
     await runInit(options);
     renderOutro("Config ready.");
   }));
@@ -48,7 +48,7 @@ program
   .option("--allow-scripts", "Allow package-manager lifecycle scripts during dependency install")
   .option("--silent", "Reduce subprocess and progress output")
   .action(wrap(async (sourceOrId, skills, options) => {
-    renderIntro("SKILLS", program.opts().banner && !options.silent);
+    renderIntro("REFPACK", program.opts().banner && !options.silent);
     await runAdd(sourceOrId, skills, options);
     renderOutro("Done.");
   }));
@@ -84,7 +84,7 @@ program
 
 program
   .command("info")
-  .description("Show current skills installer config")
+  .description("Show current refpack config")
   .action(wrap(runInfo));
 
 const skillhub = program
