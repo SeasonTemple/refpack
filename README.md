@@ -106,6 +106,36 @@ Overwrite an existing installed skill only when intended:
 skills add browser-agent --overwrite --yes
 ```
 
+## SkillHub
+
+SkillHub is the read-only server companion for this CLI. It hosts a catalog and versioned `.tgz` skill pack artifacts, then exposes a CLI-compatible registry:
+
+```text
+GET /registry.json
+GET /api/skills
+GET /api/skills/:id
+GET /api/packs/:id/:version
+```
+
+After a SkillHub deployment is running, configure the CLI against it:
+
+```bash
+skills init --target ~/.codex/skills --registry https://skillhub.example.com/registry.json
+skills search browser
+skills add browser-agent --dry-run
+```
+
+See [docs/skillhub.md](docs/skillhub.md).
+
+Run the built SkillHub server with:
+
+```bash
+SKILLHUB_CATALOG=examples/skillhub/catalog.json \
+SKILLHUB_ARTIFACT_ROOT=examples/skillhub/artifacts \
+SKILLHUB_PUBLIC_BASE_URL=http://127.0.0.1:3333 \
+npm run skillhub
+```
+
 ## Safety Model
 
 - No target directory is guessed. Pass `--target` or run `skills init`.
@@ -191,3 +221,4 @@ The smoke test in `test/cli-smoke.test.ts` builds the CLI and runs the same user
 ## Current Scope
 
 This repository implements the local CLI and installer engine. It does not yet cover npm publishing, signed registries, private registry auth, automatic update tracking, or automatic agent config mutation.
+SkillHub MVP adds a read-only catalog and artifact server, but still does not include login, publishing, private registries, update tracking, signatures, or a Web UI.

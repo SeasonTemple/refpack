@@ -3,6 +3,7 @@ dist/
 .tmp-tests/
 .tmp-installed/
 .skillsrc.json
+examples/skillhub/artifacts/
 
 *.log
 npm-debug.log*

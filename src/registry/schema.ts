@@ -1,6 +1,8 @@
 import { UserError } from "../errors/user-error.js";
 import type { RegistryEntry, SkillsRegistry } from "./types.js";
 
+const INTEGRITY_PATTERN = /^sha256-[A-Za-z0-9+/]{43}=$/;
+
 function requireString(record: Record<string, unknown>, key: string, context: string): string {
   const value = record[key];
   if (typeof value !== "string" || value.trim() === "") {
@@ -17,6 +19,30 @@ function optionalStringArray(value: unknown, context: string): string[] | undefi
   return value;
 }
 
+function optionalPositiveInteger(value: unknown, context: string): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    throw new UserError(`${context} must be a positive integer.`, "INVALID_REGISTRY");
+  }
+  return value;
+}
+
+function optionalIntegrity(value: unknown, context: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || !INTEGRITY_PATTERN.test(value)) {
+    throw new UserError(`${context} must use sha256-<base64-digest> format.`, "INVALID_REGISTRY");
+  }
+  return value;
+}
+
+function optionalArtifactType(value: unknown, context: string): "tgz" | undefined {
+  if (value === undefined) return undefined;
+  if (value !== "tgz") {
+    throw new UserError(`${context} must be "tgz".`, "INVALID_REGISTRY");
+  }
+  return value;
+}
+
 function parseEntry(value: unknown, index: number): RegistryEntry {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new UserError(`registry.skills[${index}] must be an object.`, "INVALID_REGISTRY");
@@ -24,6 +50,14 @@ function parseEntry(value: unknown, index: number): RegistryEntry {
 
   const record = value as Record<string, unknown>;
   const context = `registry.skills[${index}]`;
+  const artifactType = optionalArtifactType(record.artifactType, `${context}.artifactType`);
+  const integrity = optionalIntegrity(record.integrity, `${context}.integrity`);
+  const sizeBytes = optionalPositiveInteger(record.sizeBytes, `${context}.sizeBytes`);
+
+  if ((artifactType || integrity || sizeBytes) && (!artifactType || !integrity || !sizeBytes)) {
+    throw new UserError(`${context} archive entries must include integrity and sizeBytes.`, "INVALID_REGISTRY");
+  }
+
   return {
     id: requireString(record, "id", context),
     name: requireString(record, "name", context),
@@ -31,7 +65,11 @@ function parseEntry(value: unknown, index: number): RegistryEntry {
     source: requireString(record, "source", context),
     manifestPath: typeof record.manifestPath === "string" ? record.manifestPath : undefined,
     tags: optionalStringArray(record.tags, `${context}.tags`),
-    adapters: optionalStringArray(record.adapters, `${context}.adapters`)
+    adapters: optionalStringArray(record.adapters, `${context}.adapters`),
+    version: typeof record.version === "string" ? record.version : undefined,
+    artifactType,
+    integrity,
+    sizeBytes
   };
 }
 

@@ -4,6 +4,7 @@ import type { SkillDefinition } from "../manifest/types.js";
 import { findRegistryEntry, readRegistry } from "../registry/client.js";
 import type { RegistryEntry } from "../registry/types.js";
 import { createSourceResolver } from "../source/index.js";
+import type { SourceDescriptor } from "../source/provider.js";
 import { createInstallPlan, selectedDependencies, type InstallPlan } from "../install/plan.js";
 import { renderInstallDiff } from "../install/diff.js";
 import { applyInstallPlan } from "../install/filesystem-installer.js";
@@ -30,6 +31,9 @@ export interface AddFlowOptions {
 interface ResolvedSourceInput {
   source: string;
   manifestPath?: string;
+  artifactType?: "tgz";
+  integrity?: string;
+  sizeBytes?: number;
   registryEntry?: RegistryEntry;
 }
 
@@ -41,11 +45,11 @@ export async function runAddFlow(options: AddFlowOptions): Promise<void> {
 
   try {
     if (!options.silent) spinner.start(`Fetching ${sourceInput.source}`);
-    const resolution = await resolver.resolve(sourceInput.source);
+    const resolution = await resolver.resolve(toSourceDescriptor(sourceInput));
     cleanup = resolution.cleanup;
     if (!options.silent) spinner.message("Reading skills manifest");
 
-    const manifest = await readManifest(resolution.dir, sourceInput.manifestPath);
+    const manifest = await readManifest(resolution.dir, resolution.manifestPath ?? sourceInput.manifestPath);
     const selected = await resolveSelectedSkills(manifest.skills, options, sourceInput.registryEntry);
     const plan = await createInstallPlan({
       packDir: resolution.dir,
@@ -102,6 +106,9 @@ async function resolveSourceInput(options: AddFlowOptions): Promise<ResolvedSour
     return {
       source: entry.source,
       manifestPath: entry.manifestPath,
+      artifactType: entry.artifactType,
+      integrity: entry.integrity,
+      sizeBytes: entry.sizeBytes,
       registryEntry: entry
     };
   } catch (error) {
@@ -110,6 +117,16 @@ async function resolveSourceInput(options: AddFlowOptions): Promise<ResolvedSour
     }
     throw error;
   }
+}
+
+function toSourceDescriptor(sourceInput: ResolvedSourceInput): SourceDescriptor {
+  return {
+    source: sourceInput.source,
+    manifestPath: sourceInput.manifestPath,
+    artifactType: sourceInput.artifactType,
+    integrity: sourceInput.integrity,
+    sizeBytes: sourceInput.sizeBytes
+  };
 }
 
 function looksLikeDirectSource(value: string): boolean {

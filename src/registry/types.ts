@@ -6,6 +6,10 @@ export interface RegistryEntry {
   manifestPath?: string;
   tags?: string[];
   adapters?: string[];
+  version?: string;
+  artifactType?: "tgz";
+  integrity?: string;
+  sizeBytes?: number;
 }
 
 export interface SkillsRegistry {

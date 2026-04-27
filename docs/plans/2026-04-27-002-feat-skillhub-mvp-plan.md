@@ -1,7 +1,7 @@
 ---
 title: "feat: Add SkillHub MVP"
 type: feat
-status: active
+status: completed
 date: 2026-04-27
 ---
 
@@ -64,7 +64,7 @@ The main planning risk is scope creep. A full hub could include users, orgs, pri
 
 ### External References
 
-- Fastify official documentation supports TypeScript route declarations, JSON schema validation/serialization, and request testing with `inject`, which fits this repository's Node/TypeScript/Vitest direction.
+- Fastify official documentation supports TypeScript route declarations, JSON schema validation/serialization, and request testing with `inject`; during implementation, the MVP used a small Node built-in HTTP server with an app factory and `inject`-style test helper to avoid adding a server framework before the API surface needs it.
 - The existing CLI already uses the built-in `fetch` API for HTTP registries, so the archive provider can avoid adding a general HTTP client dependency unless implementation finds a concrete need.
 
 ## Key Technical Decisions
@@ -80,7 +80,7 @@ The main planning risk is scope creep. A full hub could include users, orgs, pri
 | Add a dedicated `HttpArchiveSourceProvider` before `GigetSourceProvider` | SkillHub artifact downloads should not depend on undocumented `giget` handling of arbitrary HTTP URLs. Provider order must keep archive URLs explicit. |
 | Verify artifact integrity in the source provider | Integrity verification belongs before manifest parsing and install planning so corrupted or tampered bytes never reach the installer. |
 | Require safe `.tgz` extraction | Integrity proves bytes match metadata, but it does not prove archive paths are safe. Extraction must reject absolute paths, parent traversal, links that escape the staging root, and unexpected file types before writing target files. |
-| Use Fastify for the SkillHub service | Fastify provides a small Node HTTP server with route schemas and in-process testing via `inject`, matching the repo's TypeScript test style. |
+| Use Node built-in HTTP for the SkillHub MVP | The v1 API is small and read-only. A minimal app factory avoids adding a framework dependency while preserving route-level tests and leaving room to adopt Fastify later if routing needs grow. |
 | Use a file-backed catalog for v1 | A JSON catalog and local artifact directory keep deployment simple and make tests deterministic. A database can be introduced later without changing the CLI registry contract. |
 | Keep catalog validation separate from registry parsing | Server catalog metadata will be richer than the CLI registry format; a projection step should produce CLI-compatible registry output. |
 | Require a configured public base URL for registry projection | `/registry.json` must emit installable artifact URLs. Building them from request headers would make CLI behavior depend on proxy details. |
@@ -117,7 +117,7 @@ The main planning risk is scope creep. A full hub could include users, orgs, pri
 
 ```mermaid
 flowchart TB
-  Catalog[SkillHub catalog JSON] --> Hub[SkillHub Fastify service]
+  Catalog[SkillHub catalog JSON] --> Hub[SkillHub HTTP service]
   Artifacts[Versioned pack artifacts] --> Hub
   Hub --> Registry[GET /registry.json]
   Hub --> Detail[GET /api/skills/:id]
@@ -154,7 +154,7 @@ flowchart TB
   U5 --> U6[Unit 6: Hardening pass]
 ```
 
-- [ ] **Unit 1: Define SkillHub catalog and registry projection**
+- [x] **Unit 1: Define SkillHub catalog and registry projection**
 
 **Goal:** Add a server-side catalog model that can represent hosted skill versions and project them into the existing CLI registry format.
 
@@ -209,9 +209,9 @@ flowchart TB
 - Existing registry tests still pass.
 - SkillHub catalog validation prevents invalid hosted metadata from reaching route handlers or CLI projection.
 
-- [ ] **Unit 2: Add the read-only SkillHub HTTP service**
+- [x] **Unit 2: Add the read-only SkillHub HTTP service**
 
-**Goal:** Provide a deployable Fastify service that loads the catalog, serves API responses, and exposes a CLI-compatible `/registry.json`.
+**Goal:** Provide a deployable HTTP service that loads the catalog, serves API responses, and exposes a CLI-compatible `/registry.json`.
 
 **Requirements:** R1, R2, R3, R4, R8, R9
 
@@ -226,8 +226,8 @@ flowchart TB
 - Test: `test/skillhub-server.test.ts`
 
 **Approach:**
-- Add Fastify as the server framework and keep the service app buildable as part of the existing TypeScript project.
-- Expose an app factory so tests can use in-process request injection without opening network ports.
+- Add a small Node HTTP service and keep it buildable as part of the existing TypeScript project.
+- Expose an app factory with an `inject`-style helper so tests can exercise routes without depending on a deployed service.
 - Load catalog path, artifact root, and public base URL from explicit server config; do not infer from the CLI `.skillsrc.json`.
 - Keep route handlers thin: catalog read/validation and registry projection live in catalog modules; artifact lookup lives in artifact modules.
 - Serve artifacts only by resolving catalog entries, not by interpolating request params into filesystem paths.
@@ -240,7 +240,7 @@ flowchart TB
 **Patterns to follow:**
 - `src/commands/*.ts` for thin entrypoints delegating to reusable modules.
 - `src/errors/user-error.ts` for user-facing error semantics where reusable.
-- Fastify's official app factory and `inject` testing pattern.
+- The existing thin module pattern plus a local app factory and `inject`-style route test helper.
 
 **Test scenarios:**
 - Happy path: `GET /health` returns healthy status when the catalog loads.
@@ -258,7 +258,7 @@ flowchart TB
 - The server can be instantiated in tests without binding a port.
 - The registry endpoint remains compatible with current CLI registry parsing.
 
-- [ ] **Unit 3: Add HTTP archive artifact resolution to the CLI**
+- [x] **Unit 3: Add HTTP archive artifact resolution to the CLI**
 
 **Goal:** Let the CLI install SkillHub-hosted archive artifacts safely by downloading, verifying, extracting, and staging them behind the existing source provider contract.
 
@@ -313,7 +313,7 @@ flowchart TB
 - Hosted artifacts cannot reach `readManifest` unless download and integrity verification succeed.
 - Existing local and `giget` source behavior remains covered.
 
-- [ ] **Unit 4: Add SkillHub fixtures, examples, and authoring docs**
+- [x] **Unit 4: Add SkillHub fixtures, examples, and authoring docs**
 
 **Goal:** Provide enough example data and documentation for a developer to run a local SkillHub deployment and configure the CLI against it.
 
@@ -356,7 +356,7 @@ flowchart TB
 - A new developer can understand the difference between a local skill pack, a registry entry, and a SkillHub catalog entry.
 - Examples can feed server and CLI tests without external services.
 
-- [ ] **Unit 5: Add end-to-end SkillHub-to-CLI coverage**
+- [x] **Unit 5: Add end-to-end SkillHub-to-CLI coverage**
 
 **Goal:** Prove the deployed-product shape in tests: SkillHub serves a registry and artifact, and the CLI installs from it through the existing command flow.
 
@@ -380,7 +380,7 @@ flowchart TB
 **Patterns to follow:**
 - `test/cli-smoke.test.ts` for real CLI invocation and temp cleanup.
 - `test/filesystem-installer.test.ts` for direct filesystem assertions.
-- Fastify `inject` tests for route-level behavior, while CLI smoke uses a real HTTP address only where the CLI needs `fetch`.
+- Route-level `inject` tests for server behavior, while CLI smoke uses a real HTTP address only where the CLI needs `fetch`.
 
 **Test scenarios:**
 - Happy path: CLI `init` points at SkillHub `/registry.json`, `search` finds `browser-agent`, `view` shows versioned metadata, dry-run writes nothing, and add installs `SKILL.md`.
@@ -395,7 +395,7 @@ flowchart TB
 - The new smoke test proves the MVP user story without depending on a deployed external server.
 - Existing CLI smoke behavior remains intact.
 
-- [ ] **Unit 6: Hardening, packaging, and operational notes**
+- [x] **Unit 6: Hardening, packaging, and operational notes**
 
 **Goal:** Make the SkillHub MVP deployable and understandable without overbuilding future platform features.
 
@@ -456,7 +456,7 @@ flowchart TB
 | Malicious or misconfigured artifact endpoints stream unbounded data | Require catalog `sizeBytes`, enforce download limits, and reject size mismatches before extraction. |
 | Catalog authors accidentally point hosted entries at arbitrary external URLs | Store server-local `artifactPath` in the catalog and derive public URLs during `/registry.json` projection. |
 | Test fixture archives become brittle binary blobs | Prefer deterministic generation in tests when practical; if committed fixtures are used, document how to regenerate them. |
-| Fastify dependency increases package footprint for CLI-only users | Keep server code isolated, evaluate dependency impact, and avoid adding UI/build-stack dependencies in this milestone. |
+| Server framework dependency increases package footprint for CLI-only users | Use Node built-in HTTP for the MVP and revisit a framework only when route complexity justifies it. |
 | Deployment docs imply production security that v1 does not provide | Document v1 as public/read-only and advise network-level protection for private catalogs until auth exists. |
 
 ## Documentation / Operational Notes
@@ -497,4 +497,4 @@ flowchart TB
 - Existing source provider boundary: `src/source/provider.ts`
 - Existing add flow: `src/flow/install-flow.ts`
 - Existing CLI smoke test: `test/cli-smoke.test.ts`
-- Fastify official docs via Context7: TypeScript route declarations, JSON schema validation/serialization, and in-process `inject` testing
+- Fastify official docs via Context7: evaluated for route declarations and `inject` testing; implementation used Node built-in HTTP to avoid a framework dependency for the small read-only MVP.

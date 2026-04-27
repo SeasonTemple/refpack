@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseManifest } from "../src/manifest/schema.js";
+import { readManifest } from "../src/manifest/read.js";
 
 describe("parseManifest", () => {
   it("parses a valid manifest", () => {
@@ -32,5 +33,9 @@ describe("parseManifest", () => {
         ]
       })
     ).toThrow(/escapes/);
+  });
+
+  it("rejects manifest paths that escape the pack directory", async () => {
+    await expect(readManifest(process.cwd(), "../skills.json")).rejects.toThrow(/escapes/);
   });
 });

@@ -1,16 +1,18 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { SourceProvider, SourceResolution } from "./provider.js";
+import type { SourceDescriptor, SourceProvider, SourceResolution } from "./provider.js";
 
 export class LocalSourceProvider implements SourceProvider {
-  async canResolve(source: string): Promise<boolean> {
-    return fs.pathExists(path.resolve(source));
+  async canResolve(input: SourceDescriptor): Promise<boolean> {
+    if (input.artifactType) return false;
+    return fs.pathExists(path.resolve(input.source));
   }
 
-  async resolve(source: string): Promise<SourceResolution> {
+  async resolve(input: SourceDescriptor): Promise<SourceResolution> {
     return {
-      dir: path.resolve(source),
-      source: path.resolve(source)
+      dir: path.resolve(input.source),
+      source: path.resolve(input.source),
+      manifestPath: input.manifestPath
     };
   }
 }

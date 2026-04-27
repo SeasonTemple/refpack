@@ -20,6 +20,10 @@ export async function runView(id: string, options: ViewOptions): Promise<void> {
   console.log(`id: ${entry.id}`);
   console.log(`source: ${entry.source}`);
   if (entry.manifestPath) console.log(`manifest: ${entry.manifestPath}`);
+  if (entry.version) console.log(`version: ${entry.version}`);
+  if (entry.artifactType) console.log(`artifact: ${entry.artifactType}`);
+  if (entry.integrity) console.log(`integrity: ${entry.integrity}`);
+  if (entry.sizeBytes) console.log(`size: ${entry.sizeBytes} bytes`);
   if (entry.tags?.length) console.log(`tags: ${formatList(entry.tags)}`);
   if (entry.adapters?.length) console.log(`adapters: ${formatList(entry.adapters)}`);
 }

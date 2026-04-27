@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0",
+  "name": "example-skillhub",
+  "skills": [
+    {
+      "id": "browser-agent",
+      "name": "Browser Agent",
+      "description": "Automates browser workflows",
+      "latestVersion": "1.0.0",
+      "tags": ["browser", "automation"],
+      "adapters": ["codex"],
+      "versions": [
+        {
+          "version": "1.0.0",
+          "artifactPath": "browser-agent/1.0.0.tgz",
+          "artifactType": "tgz",
+          "integrity": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+          "sizeBytes": 1,
+          "reviewStatus": "unreviewed"
+        }
+      ]
+    }
+  ]
+}
