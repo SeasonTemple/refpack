@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0",
+  "name": "example",
+  "skills": [
+    {
+      "id": "browser-agent",
+      "name": "Browser Agent",
+      "description": "Automates browser workflows",
+      "source": "./examples/basic-skill-pack",
+      "manifestPath": "skills.json",
+      "tags": ["browser", "automation"],
+      "adapters": ["codex"]
+    },
+    {
+      "id": "github-agent",
+      "name": "GitHub Agent",
+      "description": "Works with GitHub issues and PRs",
+      "source": "./examples/basic-skill-pack",
+      "manifestPath": "skills.json",
+      "tags": ["github", "issues", "pull-requests"],
+      "adapters": ["codex", "claude"]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "name": "basic-skill-pack",
+  "skills": [
+    {
+      "id": "browser-agent",
+      "name": "Browser Agent",
+      "description": "Automates browser workflows",
+      "source": "skills/browser-agent",
+      "target": "browser-agent",
+      "adapters": ["codex"],
+      "configInstructions": [
+        {
+          "adapter": "codex",
+          "instructions": "Restart Codex to load this skill."
+        }
+      ]
+    },
+    {
+      "id": "github-agent",
+      "name": "GitHub Agent",
+      "description": "Works with GitHub issues and PRs",
+      "source": "skills/github-agent",
+      "target": "github-agent",
+      "adapters": ["codex", "claude"]
+    }
+  ]
+}

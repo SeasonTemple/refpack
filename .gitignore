@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.tmp-tests/
+.tmp-installed/
+.skillsrc.json
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.DS_Store
+Thumbs.db
