@@ -1,6 +1,8 @@
 # refpack
 
-`refpack` is a TypeScript toolchain for packaging, validating, distributing, and installing reusable AI work context packs. The current MVP focuses on agent skill packs: discover installable units, show an install plan, copy selected files safely, and keep dependency installation explicit.
+`refpack` is a team-first agent skill manager. It helps teams package reusable agent skills, distribute them through controlled registries or SkillHub deployments, install them into local agent environments, and keep installation safety explicit.
+
+The current implementation is an MVP for agent skill packs: discover installable skills, preview the install plan, copy selected files safely, validate hosted artifacts, and keep dependency installation opt-in. The v1 direction is agent-aware lifecycle management for teams, not a public marketplace or a generic package manager for every kind of AI context.
 
 ## What It Does
 
@@ -11,6 +13,7 @@
 - Preserves existing installed skills unless overwrite is explicit.
 - Displays adapter-specific setup instructions without mutating agent config files.
 - Keeps npm dependency installation opt-in.
+- Hosts team-controlled skill catalogs and versioned artifacts with SkillHub.
 
 ## Project Status
 
@@ -34,8 +37,16 @@ Completed:
 Current intended use:
 
 - Local development and validation of agent skill packs.
-- Team-internal read-only skill distribution.
+- Team-internal skill distribution through controlled registries or read-only SkillHub deployments.
 - CI workflows that generate artifacts, validate catalogs, and deploy static catalog/artifact files behind the SkillHub server.
+
+Next direction:
+
+- Detect Codex, Claude, and custom team agent targets without writing files implicitly.
+- Track installed skill metadata and distinguish managed skills from manually placed directories.
+- Add `outdated` and conflict-safe `update` workflows.
+- Add JSON output for agent and CI workflows that need machine-readable state.
+- Keep v1 focused on team skill management: no marketplace, auth system, signature trust chain, Web UI, or automatic agent config mutation.
 
 ## Requirements
 
@@ -271,9 +282,49 @@ Status: complete.
 - Hosted `.tgz` artifact download, integrity verification, safe extraction, and install.
 - Local artifact authoring and catalog validation commands.
 
-### Phase 2: Authoring Workflow Polish
+### Phase 2: Agent-Aware Targeting
 
-Status: next.
+Status: planned.
+
+- Detect Codex and Claude target candidates conservatively.
+- Support a Generic custom target for internal or unsupported agent environments.
+- Add `refpack agents` to report detected targets, availability, and writeability.
+- Add `--agent <id>` target resolution while preserving `--target <dir>` as the explicit override.
+- Let `refpack init` choose from detected targets interactively without silently authorizing writes.
+
+### Phase 3: Installed Lifecycle
+
+Status: planned.
+
+- Track installed skill metadata near the managed target.
+- Record source, registry metadata, version, integrity, target, agent context, install time, and file hashes.
+- Make `list` distinguish managed skills from unmanaged directories.
+- Keep `remove` synchronized with installed metadata.
+- Add `outdated` for registry or SkillHub latest-version comparison.
+
+### Phase 4: Conflict-Safe Updates
+
+Status: planned.
+
+- Add `update <id>` and `update --all`.
+- Reuse source resolution, manifest validation, install planning, dry-run, and diff previews.
+- Detect local edits from install-time file hashes.
+- Block update conflicts by default and require explicit overwrite for destructive replacement.
+- Advance installed metadata only after filesystem updates succeed.
+
+### Phase 5: Automation and Team Workflows
+
+Status: planned.
+
+- Add `--json` for `agents`, `list`, `outdated`, and update preview/result output.
+- Keep JSON output free of banners, colors, spinners, and prose.
+- Add team workflow docs for authoring, validating, hosting, installing, checking outdated state, and updating.
+- Add migration notes from raw `--target` usage to agent-aware usage.
+- Add package smoke coverage for release readiness.
+
+### Phase 6: Authoring Workflow Polish
+
+Status: planned.
 
 - Generate or update catalog entries directly from `refpack skillhub pack`.
 - Add a catalog add/update command to reduce manual JSON editing.
@@ -281,7 +332,7 @@ Status: next.
 - Add release notes or changelog generation for skill versions.
 - Improve CLI output for pack metadata so it is easier to paste or pipe into automation.
 
-### Phase 3: Deployment and CI
+### Phase 7: Deployment and CI
 
 Status: planned.
 
@@ -291,44 +342,19 @@ Status: planned.
 - Add operational checks for validating `/health`, `/registry.json`, and a CLI dry run after deployment.
 - Add example rollback steps for catalog/artifact deployments.
 
-### Phase 4: Trust and Supply Chain
+### Phase 8: Trust, Private Distribution, and UI
 
-Status: planned.
+Status: future.
 
 - Add artifact signing separate from SHA-256 byte integrity.
 - Define trust policy for publisher keys.
 - Support signature verification in the CLI before install planning.
-- Document key rotation and revocation assumptions.
-- Add audit metadata for published skill versions.
-
-### Phase 5: Private Distribution
-
-Status: planned.
-
-- Add authentication and authorization for private catalogs.
-- Support organization or namespace boundaries.
+- Add authentication and authorization for private catalogs when controlled deployment is no longer enough.
 - Add token-based CLI access to private SkillHub deployments.
-- Define private registry deployment guidance.
-
-### Phase 6: Update and Lifecycle Management
-
-Status: planned.
-
-- Track installed skill metadata locally.
-- Add `outdated` or `update` commands.
-- Support version selection and upgrade previews.
-- Preserve the existing dry-run-first install model for upgrades.
-
-### Phase 7: Web UI
-
-Status: planned.
-
-- Browse catalog skills and versions.
-- Show tags, adapters, review status, artifact metadata, and install snippets.
-- Keep installation and safety decisions in the CLI.
-- Defer write/admin UI until publishing, auth, and trust models are defined.
+- Add catalog browsing UI after lifecycle, authoring, and trust boundaries are stable.
 
 ## Current Scope
 
-This repository implements the `refpack` CLI and the first supported pack kind: agent skill packs. It does not yet cover npm publishing, signed registries, private registry auth, automatic update tracking, or automatic agent config mutation.
-SkillHub MVP adds a read-only skill catalog and artifact server plus local artifact authoring helpers, but still does not include login, remote publishing, private registries, update tracking, signatures, or a Web UI.
+This repository implements the `refpack` CLI and the first supported pack kind: agent skill packs. SkillHub MVP adds a read-only skill catalog and artifact server plus local artifact authoring helpers.
+
+The v1 product boundary is team-first agent skill management. Current code does not yet include agent target detection, installed state tracking, `outdated`, `update`, JSON state output, npm publishing readiness, signed registries, private registry auth, Web UI, or automatic agent config mutation.
