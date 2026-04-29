@@ -46,6 +46,8 @@ V1 skill packs use a single `skills.json` file at the pack root.
 
 All `source` and `target` paths must be relative and cannot escape their base directory.
 
+`target` is also the path recorded in installed state. Keep it stable across versions unless the skill is intentionally moving directories; v1 update replaces the managed target rather than performing a three-way move or merge.
+
 ## SkillHub Artifacts
 
 When a pack is hosted by SkillHub v1, it is distributed as a `.tgz` archive. The archive must place `skills.json` at the archive root:

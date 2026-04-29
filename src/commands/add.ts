@@ -3,6 +3,7 @@ import { runAddFlow } from "../flow/install-flow.js";
 
 export interface AddOptions {
   target?: string;
+  agent?: string;
   registry?: string;
   all?: boolean;
   yes?: boolean;
@@ -16,11 +17,13 @@ export interface AddOptions {
 
 export async function runAdd(sourceOrId: string, skillIds: string[], options: AddOptions): Promise<void> {
   const config = await loadConfig();
+  const target = await resolveTarget({ target: options.target, agent: options.agent }, config);
   await runAddFlow({
     sourceOrId,
     skillIds,
-    targetDir: resolveTarget(options.target, config),
+    targetDir: target.targetDir,
     registry: options.registry ?? config.registry,
+    agent: target.agent,
     all: options.all,
     yes: options.yes,
     overwrite: options.overwrite,

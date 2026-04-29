@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { runAdd } from "./commands/add.js";
+import { runAgents } from "./commands/agents.js";
 import { runInit } from "./commands/init.js";
 import { runInfo } from "./commands/info.js";
 import { runList } from "./commands/list.js";
+import { runOutdated } from "./commands/outdated.js";
 import { runRemove } from "./commands/remove.js";
 import { runSearch } from "./commands/search.js";
 import { runSkillHubPack, runSkillHubValidate } from "./commands/skillhub.js";
+import { runUpdate } from "./commands/update.js";
 import { runView } from "./commands/view.js";
 import { renderIntro, renderOutro } from "./ui/prompts.js";
 import { color } from "./ui/theme.js";
@@ -16,7 +19,7 @@ const program = new Command();
 
 program
   .name("refpack")
-  .description("Package, distribute, and install reusable AI work context packs. Current MVP supports agent skill packs.")
+  .description("Package, distribute, install, and maintain reusable agent skills for teams.")
   .version("0.1.0")
   .option("--no-banner", "Disable ASCII banner");
 
@@ -24,6 +27,7 @@ program
   .command("init")
   .description("Create .refpackrc.json for this project")
   .option("-t, --target <dir>", "Target skills directory")
+  .option("-a, --agent <id>", "Agent target to configure: codex, claude, or generic")
   .option("-r, --registry <ref>", "Registry URL or JSON file")
   .action(wrap(async (options) => {
     renderIntro("REFPACK", program.opts().banner);
@@ -37,6 +41,7 @@ program
   .argument("<sourceOrId>", "Registry skill id, local directory, or remote source")
   .argument("[skills...]", "Specific skill ids inside the pack")
   .option("-t, --target <dir>", "Target skills directory")
+  .option("-a, --agent <id>", "Agent target to install into: codex, claude, or generic")
   .option("-r, --registry <ref>", "Registry URL or JSON file")
   .option("--all", "Install all skills from the pack")
   .option("-y, --yes", "Skip confirmation prompts")
@@ -54,6 +59,12 @@ program
   }));
 
 program
+  .command("agents")
+  .description("Detect local agent skill targets without writing files")
+  .option("--json", "Print machine-readable output")
+  .action(wrap(runAgents));
+
+program
   .command("search")
   .description("Search configured registry")
   .argument("[query]", "Search query", "")
@@ -65,6 +76,8 @@ program
   .description("List registry skills or installed target skills")
   .option("-r, --registry <ref>", "Registry URL or JSON file")
   .option("-t, --target <dir>", "Target skills directory")
+  .option("-a, --agent <id>", "Agent target to list: codex, claude, or generic")
+  .option("--json", "Print machine-readable output")
   .action(wrap(runList));
 
 program
@@ -79,8 +92,34 @@ program
   .description("Remove an installed skill directory")
   .argument("<id>", "Installed skill id")
   .option("-t, --target <dir>", "Target skills directory")
+  .option("-a, --agent <id>", "Agent target to remove from: codex, claude, or generic")
   .option("-y, --yes", "Skip confirmation")
   .action(wrap(runRemove));
+
+program
+  .command("outdated")
+  .description("Check managed installed skills against the configured registry")
+  .option("-t, --target <dir>", "Target skills directory")
+  .option("-a, --agent <id>", "Agent target to inspect: codex, claude, or generic")
+  .option("-r, --registry <ref>", "Registry URL or JSON file")
+  .option("--json", "Print machine-readable output")
+  .action(wrap(runOutdated));
+
+program
+  .command("update")
+  .description("Update one managed skill or all managed skills safely")
+  .argument("[id]", "Installed managed skill id")
+  .option("-t, --target <dir>", "Target skills directory")
+  .option("-a, --agent <id>", "Agent target to update: codex, claude, or generic")
+  .option("-r, --registry <ref>", "Registry URL or JSON file")
+  .option("--all", "Update all managed skills")
+  .option("-y, --yes", "Skip confirmation prompts")
+  .option("--overwrite", "Overwrite local edits")
+  .option("--dry-run", "Preview update without writing files")
+  .option("--diff", "Show file-level update diff")
+  .option("--json", "Print machine-readable output")
+  .option("--silent", "Reduce progress output")
+  .action(wrap(runUpdate));
 
 program
   .command("info")

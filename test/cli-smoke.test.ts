@@ -69,9 +69,28 @@ describe("CLI smoke flow", () => {
 
     const list = await runCli(["list", "--target", "./installed"]);
     expect(list.stdout).toContain(path.join(tmpRoot, "installed", "browser-agent"));
+    expect(list.stdout).toContain("managed");
+
+    const listJson = await runCli(["list", "--target", "./installed", "--json"]);
+    const parsedList = JSON.parse(listJson.stdout);
+    expect(parsedList.entries).toEqual([
+      expect.objectContaining({
+        id: "browser-agent",
+        managed: true,
+        missing: false
+      })
+    ]);
 
     const remove = await runCli(["remove", "browser-agent", "--yes", "--target", "./installed"]);
     expect(remove.stdout).toContain("Removed browser-agent");
     await expect(fs.pathExists(path.join(tmpRoot, "installed", "browser-agent"))).resolves.toBe(false);
+  }, 30_000);
+
+  it("prints agent discovery JSON", async () => {
+    await fs.ensureDir(tmpRoot);
+
+    const agents = await runCli(["agents", "--json"]);
+    const parsed = JSON.parse(agents.stdout);
+    expect(parsed.agents.map((agent: { id: string }) => agent.id)).toEqual(["codex", "claude", "generic"]);
   }, 30_000);
 });

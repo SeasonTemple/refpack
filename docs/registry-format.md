@@ -41,5 +41,12 @@ V1 registries are static JSON documents that point to skill packs.
 - `tags`: optional search tags.
 - `adapters`: optional runtime compatibility metadata.
 
-The installer uses the registry entry to resolve a pack, then validates the pack's `skills.json` before writing files.
+The installer uses the registry entry to resolve a pack, then validates the pack's `skills.json` before writing files. Managed lifecycle commands use the same registry entry id and `version` value for `outdated` and `update`.
 Hosted SkillHub entries should include `artifactType`, `integrity`, and `sizeBytes` together. These fields are additive; existing local registry entries do not need them.
+
+## Lifecycle Notes
+
+- `version` is compared by equality in v1. Semver ordering is intentionally deferred.
+- `source` should keep pointing at the latest pack or latest SkillHub artifact projection.
+- `manifestPath` must identify the manifest inside that source.
+- Registry ids should remain stable because installed state stores `registryId` for future updates.

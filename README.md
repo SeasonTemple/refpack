@@ -2,7 +2,7 @@
 
 `refpack` is a team-first agent skill manager. It helps teams package reusable agent skills, distribute them through controlled registries or SkillHub deployments, install them into local agent environments, and keep installation safety explicit.
 
-The current implementation is an MVP for agent skill packs: discover installable skills, preview the install plan, copy selected files safely, validate hosted artifacts, and keep dependency installation opt-in. The v1 direction is agent-aware lifecycle management for teams, not a public marketplace or a generic package manager for every kind of AI context.
+The current implementation is a v1 agent skill manager: discover installable skills, detect supported agent targets, preview installs, copy selected files safely, track managed state, report outdated skills, update with local-edit protection, validate hosted artifacts, and keep dependency installation opt-in. It is not a public marketplace or a generic package manager for every kind of AI context.
 
 ## What It Does
 
@@ -11,13 +11,19 @@ The current implementation is an MVP for agent skill packs: discover installable
 - Installs one skill, multiple named skills, or all skills from a pack.
 - Supports dry runs and install diffs before writing files.
 - Preserves existing installed skills unless overwrite is explicit.
+- Detects Codex, Claude, and Generic agent targets without writing files.
+- Tracks managed installs with source metadata, versions, and file hashes.
+- Lists managed and unmanaged target directories distinctly.
+- Checks managed skills for outdated registry or SkillHub versions.
+- Updates managed skills while blocking local-edit conflicts by default.
+- Prints JSON for agent discovery and lifecycle state commands.
 - Displays adapter-specific setup instructions without mutating agent config files.
 - Keeps npm dependency installation opt-in.
 - Hosts team-controlled skill catalogs and versioned artifacts with SkillHub.
 
 ## Project Status
 
-Current milestone: agent skill pack MVP with SkillHub is implemented and end-to-end verified.
+Current milestone: agent-aware skill manager v1 is implemented and end-to-end verified.
 
 Completed:
 
@@ -33,6 +39,11 @@ Completed:
 - Safe `.tgz` extraction that rejects path traversal, absolute paths, links, and unsupported entry types.
 - Automated coverage for the installer, registry parser, SkillHub catalog, SkillHub server, archive provider, authoring flow, and real CLI smoke paths.
 - Manual end-to-end verification for local registry install, real Codex skills directory install/remove, SkillHub pack/validate, SkillHub server startup, and CLI install from SkillHub.
+- Agent discovery for Codex, Claude, and Generic custom targets.
+- `--agent <id>` target resolution while keeping `--target <dir>` as the explicit override.
+- Installed state stored under the managed target.
+- State-aware `list`, `remove`, `outdated`, and conflict-safe `update`.
+- JSON output for `agents`, `list`, `outdated`, and update preview/result.
 
 Current intended use:
 
@@ -40,13 +51,13 @@ Current intended use:
 - Team-internal skill distribution through controlled registries or read-only SkillHub deployments.
 - CI workflows that generate artifacts, validate catalogs, and deploy static catalog/artifact files behind the SkillHub server.
 
-Next direction:
+Still out of scope for v1:
 
-- Detect Codex, Claude, and custom team agent targets without writing files implicitly.
-- Track installed skill metadata and distinguish managed skills from manually placed directories.
-- Add `outdated` and conflict-safe `update` workflows.
-- Add JSON output for agent and CI workflows that need machine-readable state.
-- Keep v1 focused on team skill management: no marketplace, auth system, signature trust chain, Web UI, or automatic agent config mutation.
+- Public marketplace, ratings, install counts, users, organizations, or auth.
+- Remote publishing to SkillHub.
+- Artifact signatures or publisher identity trust chains.
+- Web UI.
+- Automatic Codex, Claude, MCP, or runtime config mutation.
 
 ## Requirements
 
@@ -82,34 +93,62 @@ The example registry points at `examples/basic-skill-pack`.
 node dist/cli.js init --target ./.tmp-installed --registry ./examples/registry.json
 node dist/cli.js search browser
 node dist/cli.js view browser-agent
+node dist/cli.js agents
 node dist/cli.js add browser-agent --dry-run
 node dist/cli.js add browser-agent --yes
 node dist/cli.js list --target ./.tmp-installed
+node dist/cli.js outdated --target ./.tmp-installed
+node dist/cli.js update browser-agent --dry-run --target ./.tmp-installed
 node dist/cli.js remove browser-agent --yes --target ./.tmp-installed
 ```
 
 After publishing or linking the package, the binary name is `refpack`:
 
 ```bash
-refpack init --target ~/.codex/skills --registry ./examples/registry.json
+refpack agents
+refpack init --agent codex --registry ./examples/registry.json
 refpack search browser
 refpack add browser-agent --dry-run
 refpack add browser-agent --yes
+refpack outdated
+refpack update browser-agent --dry-run
 ```
 
 ## Commands
 
 ```text
 refpack init
+refpack agents [--json]
 refpack add <source-or-id> [skills...]
 refpack search [query]
-refpack list
+refpack list [--json]
 refpack view <id>
+refpack outdated [--json]
+refpack update [id] [--all] [--dry-run] [--diff] [--json]
 refpack remove <id>
 refpack info
 refpack skillhub pack <packDir> --artifact-version <version>
 refpack skillhub validate --catalog <file> --artifact-root <dir>
 ```
+
+## Agent Targets
+
+Use `refpack agents` to inspect supported local targets without modifying files:
+
+```bash
+refpack agents
+refpack agents --json
+```
+
+Target precedence is:
+
+1. `--target <dir>`
+2. `--agent <id>`
+3. configured target from `.refpackrc.json`
+
+Supported agent ids are `codex`, `claude`, and `generic`. Codex uses `$CODEX_HOME/skills` or `~/.codex/skills`. Claude uses `$CLAUDE_HOME/skills` or `~/.claude/skills`. Generic has no implicit target and must be paired with `--target` or saved config.
+
+See [docs/agent-targets.md](docs/agent-targets.md).
 
 ## Installing From Sources
 
@@ -144,6 +183,21 @@ Overwrite an existing installed skill only when intended:
 refpack add browser-agent --overwrite --yes
 ```
 
+## Installed Lifecycle
+
+Installs write managed state under the target at `.refpack/installed-state.json`. This state records source metadata, registry id, version, agent context, install time, artifact integrity fields, and per-file hashes.
+
+```bash
+refpack list --json
+refpack outdated --json
+refpack update browser-agent --dry-run --diff
+refpack update --all --yes
+```
+
+`update` compares recorded hashes with current files before writing. Local edits or deleted installed files block updates by default. Pass `--overwrite` only when replacing local changes is intentional.
+
+See [docs/installed-state.md](docs/installed-state.md).
+
 ## SkillHub
 
 SkillHub is the read-only server companion for this CLI. It hosts a catalog and versioned `.tgz` skill pack artifacts, then exposes a CLI-compatible registry:
@@ -161,6 +215,8 @@ After a SkillHub deployment is running, configure the CLI against it:
 refpack init --target ~/.codex/skills --registry https://skillhub.example.com/registry.json
 refpack search browser
 refpack add browser-agent --dry-run
+refpack outdated
+refpack update browser-agent --dry-run
 ```
 
 See [docs/skillhub.md](docs/skillhub.md).
@@ -189,8 +245,11 @@ npm run skillhub
 ## Safety Model
 
 - No target directory is guessed. Pass `--target` or run `refpack init`.
+- Agent detection is advisory. Writes require `--agent`, `--target`, saved config, or explicit confirmation.
 - Existing skill directories are blocked by default.
 - `--dry-run` prints the install plan without writing files.
+- Update checks installed file hashes before replacement and blocks local edits by default.
+- Installed metadata advances only after successful filesystem writes.
 - Skill `source` and `target` paths must be relative and cannot escape their base directories.
 - Dependency installation only runs with `--install`.
 - Package-manager lifecycle scripts stay disabled unless `--allow-scripts` is passed.
@@ -255,12 +314,15 @@ Project layout:
 
 ```text
 src/commands/     CLI command handlers
+src/agents/       agent target adapters and detection
 src/flow/         Add/install orchestration
 src/install/      Install planning, file copying, dependency install
+src/lifecycle/    outdated, update, and conflict checks
 src/manifest/     skills.json validation
 src/registry/     registry parsing and search
 src/skillhub/     SkillHub catalog, server, and authoring helpers
 src/source/       local and remote source resolution
+src/state/        installed state and file hashes
 src/ui/           prompt and terminal output helpers
 test/             Vitest coverage
 examples/         sample registry and skill pack
@@ -284,17 +346,17 @@ Status: complete.
 
 ### Phase 2: Agent-Aware Targeting
 
-Status: planned.
+Status: complete.
 
 - Detect Codex and Claude target candidates conservatively.
 - Support a Generic custom target for internal or unsupported agent environments.
 - Add `refpack agents` to report detected targets, availability, and writeability.
 - Add `--agent <id>` target resolution while preserving `--target <dir>` as the explicit override.
-- Let `refpack init` choose from detected targets interactively without silently authorizing writes.
+- Let `refpack init --agent <id>` save a detected target without silently authorizing writes.
 
 ### Phase 3: Installed Lifecycle
 
-Status: planned.
+Status: complete.
 
 - Track installed skill metadata near the managed target.
 - Record source, registry metadata, version, integrity, target, agent context, install time, and file hashes.
@@ -304,7 +366,7 @@ Status: planned.
 
 ### Phase 4: Conflict-Safe Updates
 
-Status: planned.
+Status: complete.
 
 - Add `update <id>` and `update --all`.
 - Reuse source resolution, manifest validation, install planning, dry-run, and diff previews.
@@ -314,7 +376,7 @@ Status: planned.
 
 ### Phase 5: Automation and Team Workflows
 
-Status: planned.
+Status: complete.
 
 - Add `--json` for `agents`, `list`, `outdated`, and update preview/result output.
 - Keep JSON output free of banners, colors, spinners, and prose.
@@ -355,6 +417,6 @@ Status: future.
 
 ## Current Scope
 
-This repository implements the `refpack` CLI and the first supported pack kind: agent skill packs. SkillHub MVP adds a read-only skill catalog and artifact server plus local artifact authoring helpers.
+This repository implements the `refpack` CLI and the first supported pack kind: agent skill packs. SkillHub adds a read-only skill catalog and artifact server plus local artifact authoring helpers.
 
-The v1 product boundary is team-first agent skill management. Current code does not yet include agent target detection, installed state tracking, `outdated`, `update`, JSON state output, npm publishing readiness, signed registries, private registry auth, Web UI, or automatic agent config mutation.
+The v1 product boundary is team-first agent skill management. Current code includes agent target detection, installed state tracking, `outdated`, `update`, JSON state output, and package smoke coverage. It does not include signed registries, private registry auth, Web UI, remote publishing, or automatic agent config mutation.

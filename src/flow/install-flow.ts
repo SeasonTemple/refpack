@@ -8,6 +8,8 @@ import type { SourceDescriptor } from "../source/provider.js";
 import { createInstallPlan, selectedDependencies, type InstallPlan } from "../install/plan.js";
 import { renderInstallDiff } from "../install/diff.js";
 import { applyInstallPlan } from "../install/filesystem-installer.js";
+import { hashInstalledFiles } from "../state/files.js";
+import { relativeSkillTarget, upsertInstalledSkill } from "../state/store.js";
 import { installDependencies } from "../install/dependency-installer.js";
 import { confirmAction, createSpinner, selectSkills } from "../ui/prompts.js";
 import { color, formatList } from "../ui/theme.js";
@@ -26,6 +28,7 @@ export interface AddFlowOptions {
   install?: boolean;
   allowScripts?: boolean;
   silent?: boolean;
+  agent?: string;
 }
 
 interface ResolvedSourceInput {
@@ -74,6 +77,25 @@ export async function runAddFlow(options: AddFlowOptions): Promise<void> {
     }
 
     const result = await applyInstallPlan(plan);
+    for (const item of plan.items) {
+      const relativeTarget = relativeSkillTarget(plan.targetDir, item.targetDir);
+      await upsertInstalledSkill(plan.targetDir, {
+        id: item.skill.id,
+        target: relativeTarget,
+        source: sourceInput.source,
+        registryId: sourceInput.registryEntry?.id,
+        version: sourceInput.registryEntry?.version,
+        manifestPath: sourceInput.manifestPath,
+        agent: options.agent,
+        installedAt: new Date().toISOString(),
+        artifact: {
+          type: sourceInput.artifactType,
+          integrity: sourceInput.integrity,
+          sizeBytes: sourceInput.sizeBytes
+        },
+        files: await hashInstalledFiles(plan.targetDir, relativeTarget)
+      });
+    }
     const dependencies = selectedDependencies(plan);
 
     if (options.install && dependencies.length > 0) {

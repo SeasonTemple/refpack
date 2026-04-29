@@ -18,7 +18,7 @@ SkillHub v1 does not include:
 - Login, tokens, SSO, users, or organizations.
 - Private registries.
 - Remote publishing workflows.
-- Update or outdated tracking.
+- Server-side update or outdated tracking. The CLI can run `outdated` and `update` against SkillHub's `/registry.json` projection.
 - Web UI.
 - Artifact signatures or publisher identity.
 - Automatic Codex, Claude, MCP, or runtime config mutation.
@@ -157,6 +157,8 @@ Then configure the CLI:
 refpack init --target ~/.codex/skills --registry http://127.0.0.1:3333/registry.json
 refpack search browser
 refpack add browser-agent --dry-run
+refpack outdated
+refpack update browser-agent --dry-run
 ```
 
 ## Operational Notes

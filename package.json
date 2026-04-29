@@ -1,7 +1,7 @@
 {
   "name": "refpack",
   "version": "0.1.0",
-  "description": "A toolchain for packaging, validating, distributing, and installing reusable AI work context packs.",
+  "description": "Team-first agent skill manager for packaging, distributing, installing, and maintaining reusable skills.",
   "type": "module",
   "bin": {
     "refpack": "./dist/cli.js"

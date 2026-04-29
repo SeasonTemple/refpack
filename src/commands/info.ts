@@ -5,5 +5,6 @@ export async function runInfo(): Promise<void> {
   const config = await loadConfig();
   console.log(color.bold("refpack"));
   console.log(`target: ${config.target ?? "(not configured)"}`);
+  console.log(`agent: ${config.agent ?? "(not configured)"}`);
   console.log(`registry: ${config.registry ?? "(not configured)"}`);
 }
