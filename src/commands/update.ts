@@ -92,11 +92,12 @@ export async function runUpdate(id: string | undefined, options: UpdateOptions):
   const spinner = createSpinner();
   const resolver = createSourceResolver();
   const updated: string[] = [];
+  const quiet = options.silent || options.json;
 
   for (const candidate of planned) {
     let cleanup: (() => Promise<void>) | undefined;
     try {
-      if (!options.silent) spinner.start(`Fetching ${candidate.latest.id}`);
+      if (!quiet) spinner.start(`Fetching ${candidate.latest.id}`);
       const resolution = await resolver.resolve({
         source: candidate.latest.source,
         manifestPath: candidate.latest.manifestPath,
@@ -116,7 +117,7 @@ export async function runUpdate(id: string | undefined, options: UpdateOptions):
         allowScripts: false
       });
 
-      if (!options.silent) spinner.stop(`Prepared update for ${candidate.installed.id}`);
+      if (!quiet) spinner.stop(`Prepared update for ${candidate.installed.id}`);
       if (!options.json) {
         console.log(`${candidate.installed.id}: ${candidate.installed.version ?? "unknown"} -> ${candidate.latest.version ?? "unknown"}`);
       }

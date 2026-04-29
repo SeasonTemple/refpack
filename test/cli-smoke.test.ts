@@ -38,6 +38,7 @@ describe("CLI smoke flow", () => {
             description: "Automates browser workflows",
             source: skillPackPath,
             manifestPath: "skills.json",
+            version: "1.0.0",
             tags: ["browser", "automation"],
             adapters: ["codex"]
           }
@@ -80,6 +81,51 @@ describe("CLI smoke flow", () => {
         missing: false
       })
     ]);
+
+    const packV2 = path.join(tmpRoot, "pack-v2");
+    await fs.outputFile(path.join(packV2, "skills", "browser-agent", "SKILL.md"), "# Browser Agent v2");
+    await fs.writeJson(
+      path.join(packV2, "skills.json"),
+      {
+        schemaVersion: "1.0",
+        name: "pack-v2",
+        skills: [
+          {
+            id: "browser-agent",
+            name: "Browser Agent",
+            description: "Automates browser workflows",
+            source: "skills/browser-agent",
+            target: "browser-agent"
+          }
+        ]
+      },
+      { spaces: 2 }
+    );
+    await fs.writeJson(
+      path.join(tmpRoot, "registry.json"),
+      {
+        schemaVersion: "1.0",
+        name: "test-registry",
+        skills: [
+          {
+            id: "browser-agent",
+            name: "Browser Agent",
+            description: "Automates browser workflows",
+            source: packV2,
+            manifestPath: "skills.json",
+            version: "1.1.0"
+          }
+        ]
+      },
+      { spaces: 2 }
+    );
+
+    const updateJson = await runCli(["update", "browser-agent", "--target", "./installed", "--registry", "./registry.json", "--yes", "--json"]);
+    expect(JSON.parse(updateJson.stdout)).toEqual({
+      target: path.join(tmpRoot, "installed"),
+      updated: ["browser-agent"]
+    });
+    await expect(fs.readFile(path.join(tmpRoot, "installed", "browser-agent", "SKILL.md"), "utf8")).resolves.toBe("# Browser Agent v2");
 
     const remove = await runCli(["remove", "browser-agent", "--yes", "--target", "./installed"]);
     expect(remove.stdout).toContain("Removed browser-agent");
