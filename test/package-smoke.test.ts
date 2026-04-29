@@ -15,10 +15,10 @@ describe("package smoke", () => {
 
     expect(files).toContain("dist/cli.js");
     expect(files).toContain("README.md");
+    expect(files).toContain("README.zh-CN.md");
     expect(files).toContain("docs/agent-targets.md");
     expect(files).toContain("docs/installed-state.md");
     expect(files).toContain("docs/v1-release-checklist.md");
     expect(files.some((file) => file.startsWith("examples/"))).toBe(true);
   }, 30_000);
 });
-

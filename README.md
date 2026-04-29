@@ -1,5 +1,7 @@
 # refpack
 
+[中文版](README.zh-CN.md)
+
 `refpack` is a team-first agent skill manager. It helps teams package reusable agent skills, distribute them through controlled registries or SkillHub deployments, install them into local agent environments, and keep installation safety explicit.
 
 The current implementation is a v1 agent skill manager: discover installable skills, detect supported agent targets, preview installs, copy selected files safely, track managed state, report outdated skills, update with local-edit protection, validate hosted artifacts, and keep dependency installation opt-in. It is not a public marketplace or a generic package manager for every kind of AI context.
