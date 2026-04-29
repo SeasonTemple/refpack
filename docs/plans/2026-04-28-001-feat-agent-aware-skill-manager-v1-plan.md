@@ -1,7 +1,7 @@
 ---
 title: "feat: Build agent-aware skill manager v1"
 type: feat
-status: active
+status: completed
 date: 2026-04-28
 origin: docs/brainstorms/2026-04-28-agent-aware-team-skill-manager-v1-requirements.md
 ---
